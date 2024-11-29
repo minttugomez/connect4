@@ -10,6 +10,7 @@ python = "^3.10"
 coverage = "^7.6.4"
 pylint = "^3.3.1"
 pytest = "^8.3.3"
+invoke = "^2.2.0"
 
 
 [build-system]

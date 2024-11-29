@@ -17,6 +17,7 @@ class ConnectFour:
         self.ai = AI
         self.grid = [[0] * 7 for _ in range(6)]
         self.turn = 0
+        exit = False
 
     def run(self):
 
@@ -30,13 +31,16 @@ class ConnectFour:
                 for row in self.grid:
                     print(row)
                 try:
-                    column = int(input("Choose column: "))
-                    if column not in range(1, 8):
+                    column = input("Choose column: ")
+                    if column == "exit":
+                        exit = True
+                        break
+                    if int(column) not in range(1, 8):
                         print("Invalid input, try again")
                         time.sleep(1)
                         continue
-                    if self.grid[0][column - 1] == 0:
-                        success = self.play_turn(self.turn, column)
+                    if self.grid[0][int(column) - 1] == 0:
+                        success = self.play_turn(self.turn, int(column))
                     else:
                         print("Column is full, try a different column")
                         time.sleep(1)
@@ -64,11 +68,12 @@ class ConnectFour:
                 print("Invalid input, try again")
                 time.sleep(1)
 
-        print("Starting new game")
-        time.sleep(1)
+        if not exit:
+            print("Starting new game")
+            time.sleep(1)
 
-        self.reset_grid()
-        self.run()
+            self.reset_grid()
+            self.run()
 
     def play_turn(self, player, column):
 
