@@ -22,6 +22,8 @@ Algorithm that plays Connect Four as efficiently as possible.
 
 [Week 4](https://github.com/minttugomez/connect4/blob/main/connect4/documentation/weekly%20reports/week4.md)
 
+[Week 5](https://github.com/minttugomez/connect4/blob/main/connect4/documentation/weekly%20reports/week5.md)
+
 ## Commands
 
 ### Installation
@@ -46,9 +48,9 @@ Run tests:
 poetry run invoke test
 ```
 
-### Testikattavuus
+### Coverage report
 
-Generate test coverage report:
+Generate coverage report for the tests:
 
 ```bash
 poetry run invoke coverage-report
