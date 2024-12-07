@@ -17,7 +17,7 @@ class ConnectFour:
         self.ai = AI
         self.grid = [[0] * 7 for _ in range(6)]
         self.turn = 0
-        exit = False
+        self.exit = False
 
     def run(self):
 
@@ -33,27 +33,30 @@ class ConnectFour:
                 try:
                     column = input("Choose column: ")
                     if column == "exit":
-                        exit = True
+                        self.exit = True
                         break
                     if int(column) not in range(1, 8):
                         print("Invalid input, try again")
                         time.sleep(1)
                         continue
                     if self.grid[0][int(column) - 1] == 0:
+                        column = int(column) - 1
                         success = self.play_turn(self.turn, int(column))
                     else:
                         print("Column is full, try a different column")
+                        success = False
                         time.sleep(1)
+
                 except ValueError:
                     pass
 
             elif self.turn == 2:
                 column = self.ai.play(self.grid)
-                if column in range(1, 8) and self.grid[0][column-1] == 0:
+                if column in range(0, 7) and self.grid[0][column] == 0:
                     success = self.play_turn(self.turn, column)
 
             if success:
-                if self.check_win():
+                if self.check_win(success[0], success[1]):
                     print(f"Winner: {self.turn}")
                     time.sleep(1)
                     break
@@ -64,11 +67,12 @@ class ConnectFour:
                 self.switch_turn()
                 print(f"Player {self.turn}'s turn")
                 time.sleep(1)
-            else:
-                print("Invalid input, try again")
-                time.sleep(1)
 
-        if not exit:
+        input_exit = input("Exit? (yes or no): ")
+        if input_exit == "yes":
+            self.exit = True
+
+        if not self.exit:
             print("Starting new game")
             time.sleep(1)
 
@@ -92,11 +96,11 @@ class ConnectFour:
 
         symbol = player
 
-        if 1 <= column <= 7:
+        if 0 <= column <= 6:
             for row in range(5, -1, -1):
-                if self.grid[row][column-1] == 0:
-                    self.grid[row][column-1] = symbol
-                    return True
+                if self.grid[row][column] == 0:
+                    self.grid[row][column] = symbol
+                    return (row, column)
 
         return False
 
@@ -111,7 +115,7 @@ class ConnectFour:
         else:
             raise ValueError
 
-    def check_win(self):
+    def check_win(self, row, col):
 
         """ Checks if current player won the game.
 
@@ -119,13 +123,18 @@ class ConnectFour:
             True if current player won
             False if current player did not win """
 
-        for row in range(6):
-            for col in range(7):
-                if self.grid[row][col] == self.turn:
-                    if (self.check_direction(row, col, 1, 0) or
-                        self.check_direction(row, col, 0, 1) or
-                        self.check_direction(row, col, 1, 1) or
-                        self.check_direction(row, col, 1, -1)):
+        row_start = max(0, row - 3)
+        col_start = max(0, col - 3)
+        row_end = min(5, row + 3)
+        col_end = min(6, col + 3)
+
+        for r in range(row_start, row_end + 1):
+            for c in range(col_start, col_end + 1):
+                if self.grid[r][c] == self.turn:
+                    if (self.check_direction(r, c, 1, 0) or
+                        self.check_direction(r, c, 0, 1) or
+                        self.check_direction(r, c, 1, 1) or
+                        self.check_direction(r, c, 1, -1)):
                         return True
         return False
 
