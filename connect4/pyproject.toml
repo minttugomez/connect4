@@ -13,6 +13,9 @@ pytest = "^8.3.3"
 invoke = "^2.2.0"
 
 
+[tool.poetry.group.dev.dependencies]
+pylint = "^3.3.3"
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"

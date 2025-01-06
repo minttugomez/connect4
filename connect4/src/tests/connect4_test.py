@@ -1,5 +1,7 @@
 import unittest
 from unittest.mock import Mock
+from unittest.mock import patch
+from io import StringIO
 from connect4 import ConnectFour
 
 class TestConnectFour(unittest.TestCase):
@@ -37,12 +39,12 @@ class TestConnectFour(unittest.TestCase):
         self.assertEqual(self.connect_four.turn, 2)
         self.connect_four.switch_turn()
         self.assertEqual(self.connect_four.turn, 1)
-    
+
     def test_switch_turn_invalid(self):
         self.connect_four.turn = 3
         with self.assertRaises(ValueError):
             self.connect_four.switch_turn()
-    
+
     def test_check_win_horizontal(self):
         self.connect_four.turn = 1
         self.connect_four.grid = [[0, 0, 0, 0, 0, 0, 0],
@@ -119,3 +121,144 @@ class TestConnectFour(unittest.TestCase):
         self.connect_four.reset_grid()
 
         self.assertEqual(self.connect_four.grid, expected_grid)
+
+    @patch("builtins.input")
+    @patch("sys.stdout", new_callable=StringIO)
+
+    def test_run(self, mock_stdout, mock_input):
+        
+        mock_input.side_effect = [
+            "5",
+            "exit",
+            "yes"
+        ]
+
+        self.connect_four.ai.play = lambda _: 4
+
+        self.connect_four.run()
+
+        self.assertTrue(self.connect_four.exit)
+
+        expected_grid = "[0, 0, 0, 0, 0, 0, 0]\n[0, 0, 0, 0, 0, 0, 0]\n[0, 0, 0, 0, 0, 0, 0]\n[0, 0, 0, 0, 0, 0, 0]\n[0, 0, 0, 0, 0, 0, 0]\n[0, 0, 0, 0, 0, 0, 0]\nPlayer 2's turn\nPlayer 1's turn\n[0, 0, 0, 0, 0, 0, 0]\n[0, 0, 0, 0, 0, 0, 0]\n[0, 0, 0, 0, 0, 0, 0]\n[0, 0, 0, 0, 0, 0, 0]\n[0, 0, 0, 0, 2, 0, 0]\n[0, 0, 0, 0, 1, 0, 0]\n"
+
+        output = mock_stdout.getvalue()
+
+        self.assertIn(expected_grid, output)
+
+    @patch("builtins.input")
+    @patch("sys.stdout", new_callable=StringIO)
+
+    def test_invalid_input(self, mock_stdout, mock_input):
+
+        mock_input.side_effect = [
+            "0",
+            "exit",
+            "yes"
+        ]
+
+        self.connect_four.run()
+
+        output = mock_stdout.getvalue()
+
+        self.assertIn("Invalid input, try again", output)
+
+    @patch("builtins.input")
+    @patch("sys.stdout", new_callable=StringIO)
+
+    def test_run_column_full(self, mock_stdout, mock_input):
+
+        self.connect_four.grid = [[0, 0, 0, 1, 0, 0, 0],
+                                  [0, 0, 0, 1, 0, 0, 0],
+                                  [0, 0, 0, 2, 0, 1, 1],
+                                  [0, 0, 0, 2, 1, 1, 2],
+                                  [0, 0, 0, 1, 2, 2, 2],
+                                  [0, 0, 0, 2, 1, 2, 1]]
+
+        mock_input.side_effect = [
+            "4",
+            "exit",
+            "yes"
+        ]
+
+        self.connect_four.run()
+
+        output = mock_stdout.getvalue()
+
+        self.assertIn("Column is full, try a different column", output)
+
+    @patch("builtins.input")
+    @patch("sys.stdout", new_callable=StringIO)
+
+    def test_run_win(self, mock_stdout, mock_input):
+
+        self.connect_four.grid = [[0, 0, 0, 0, 0, 0, 0],
+                                  [0, 0, 0, 0, 0, 0, 0],
+                                  [0, 0, 0, 0, 0, 1, 1],
+                                  [0, 0, 0, 0, 1, 1, 2],
+                                  [0, 0, 0, 1, 2, 2, 2],
+                                  [0, 0, 0, 2, 1, 2, 1]]
+
+        mock_input.side_effect = [
+            "3",
+            "yes"
+        ]
+
+        self.connect_four.run()
+
+        self.assertTrue(self.connect_four.exit)
+
+        output = mock_stdout.getvalue()
+
+        self.assertIn("Winner: 1", output)
+
+    @patch("builtins.input")
+    @patch("sys.stdout", new_callable=StringIO)
+
+    def test_run_grid_full(self, mock_stdout, mock_input):
+
+        self.connect_four.grid = [[2, 0, 2, 1, 2, 2, 2],
+                                  [2, 1, 1, 2, 2, 2, 1],
+                                  [1, 1, 1, 2, 1, 1, 1],
+                                  [2, 2, 1, 1, 2, 2, 1],
+                                  [2, 2, 2, 1, 2, 2, 2],
+                                  [2, 1, 2, 2, 2, 1, 1]]
+
+        mock_input.side_effect = [
+            "2",
+            "yes"
+        ]
+
+        self.connect_four.run()
+
+        self.assertTrue(self.connect_four.exit)
+
+        output = mock_stdout.getvalue()
+
+        self.assertIn("No winner. Out of turns", output)
+
+    @patch("builtins.input")
+    @patch("sys.stdout", new_callable=StringIO)
+
+    def test_run_new_game(self, mock_stdout, mock_input):
+
+        self.connect_four.grid = [[2, 0, 1, 1, 2, 2, 2],
+                                  [2, 1, 1, 2, 1, 2, 1],
+                                  [1, 1, 1, 2, 1, 1, 1],
+                                  [2, 2, 2, 1, 1, 2, 1],
+                                  [2, 2, 1, 1, 2, 2, 2],
+                                  [2, 1, 2, 2, 2, 1, 1]]
+
+        mock_input.side_effect = [
+            "2",
+            "no",
+            "exit",
+            "yes"
+        ]
+
+        self.connect_four.run()
+
+        self.assertTrue(self.connect_four.exit)
+
+        output = mock_stdout.getvalue()
+
+        self.assertIn("Starting new game", output)

@@ -1,3 +1,6 @@
+"""This module provides functionality for a Connect 4 game playable against AI.
+This module does not include user interface but is playable through command line instead."""
+
 import time
 
 class ConnectFour:
@@ -58,6 +61,9 @@ class ConnectFour:
             if success:
                 if self.check_win(success[0], success[1]):
                     print(f"Winner: {self.turn}")
+                    time.sleep(1)
+                    for row in self.grid:
+                        print(row)
                     time.sleep(1)
                     break
                 if self.grid_full():

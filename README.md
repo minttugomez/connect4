@@ -26,6 +26,8 @@ Algorithm that plays Connect Four as efficiently as possible.
 
 [Week 6](https://github.com/minttugomez/connect4/blob/main/connect4/documentation/weekly%20reports/week6.md)
 
+[Week 7](https://github.com/minttugomez/connect4/blob/main/connect4/documentation/weekly%20reports/week7.md)
+
 ## Commands
 
 ### Installation

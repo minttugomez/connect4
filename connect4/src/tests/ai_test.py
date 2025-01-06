@@ -1,1 +1,31 @@
 import unittest
+from unittest.mock import Mock
+from AI import AI
+
+class TestAI(unittest.TestCase):
+    def setUp(self):
+        self.AI = AI()
+
+    def test_init(self):
+        self.assertEqual(self.AI.columns, [3,2,4,1,5,0,6])
+        self.assertEqual(self.AI.last_cell, (-1, -1))
+        self.assertEqual(self.AI.time_limit, 2.0)
+        self.assertEqual(self.AI.best_moves, {})
+        self.assertEqual(self.AI.start_time, None)
+
+    def test_play(self):
+        grid = [[0, 0, 0, 0, 0, 0, 0] for _ in range(6)]
+        self.AI.time_limit = 0.1
+        best_col = self.AI.play(grid)
+        self.assertIsNotNone(best_col)
+
+    def test_play_for_win(self):
+        grid = [[0, 0, 0, 0, 0, 0, 0],
+                [0, 0, 0, 0, 0, 0, 0],
+                [0, 0, 0, 0, 0, 1, 1],
+                [0, 0, 0, 0, 1, 1, 2],
+                [0, 0, 0, 2, 2, 2, 1],
+                [0, 0, 1, 2, 1, 2, 1]]
+        best_col = self.AI.play(grid)
+        self.assertEqual(best_col, 2)
+        

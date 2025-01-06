@@ -1,63 +1,202 @@
+"""This module provides AI for Connect 4.
+This AI uses minimax algorithm with alpha-beta pruning to evaluate the best possible moves."""
+
+import time
+
 class AI:
 
-    """ Class for Connect Four AI. """
+    """ Class for Connect Four AI."""
 
     def __init__(self):
 
         """ Constructor for the class. """
 
         self.columns = [3,2,4,1,5,0,6]
+        self.last_cell = (-1, -1)
+        self.time_limit = 2.0
+        self.best_moves = {}
+        self.start_time = None
 
     def play(self, grid):
 
-        """ Function for playing a turn.
-            Run through ConnectFour class when it's the AI's turn.
+        """ Function for AI playing a turn.
+            Runs the minimax algorithm until time limit has been reached.
 
         Args:
             grid: current game situation in grid form
 
         Returns:
-            column: the column where the AI has chosen to place the next marker """
+            best_col: the column where the AI has chosen to place the next marker """
 
-        free = self.get_valid_columns(grid)
-        column = free[0]
-        for col in free:
-            if self.check_win(col, grid):
-                column = col
+        self.start_time = time.time()
+
+        best_col = None
+        for depth in range(1, 100):
+            if time.time() - self.start_time > self.time_limit:
                 break
+            _, col = self.minimax(grid, depth, float('-inf'), float('inf'), is_maximizing=True)
+            if col is not None:
+                best_col = col
+                self.best_moves[self.hash_grid(grid)] = col
 
-        return column
-    
+        return best_col
+
+    def minimax(self, grid, depth, alpha, beta, is_maximizing):
+
+        """ Minimax algorithm with alpha-beta pruning.
+            Evaluates potential moves to determine the best possible move.
+
+        Args:
+            grid: current or simulated game situation in grid form
+            depth: remaining depth to explore in the game tree
+            alpha: best score the maximizer can guarantee so far
+            beta: best score the minimizer can guarantee so far
+            is_maximizing: indicates whether the current player is the
+                           maximizer (AI) or minimizer (opponent)
+
+        Returns:
+            score: evaluated score of the move at this depth
+            best_col: column index of the best move found at this depth  """
+
+        if time.perf_counter() - self.start_time > self.time_limit:
+            return 0, None
+
+        if depth == 0 or self.check_win(self.last_cell[0], self.last_cell[1], grid) or not self.get_valid_columns(grid):
+            return self.evaluate_grid(grid), None
+
+        valid_columns = self.get_valid_columns(grid)
+        best = self.best_moves.get(self.hash_grid(grid))
+        if best in valid_columns:
+            valid_columns.remove(best)
+            valid_columns.insert(0, best)
+
+        if is_maximizing:
+            max_score = float('-inf')
+            best_col = None
+            for col in valid_columns:
+                temp_grid = self.simulate_move(grid, col, 2)
+                column_penalty = self.evaluate_column(col, temp_grid)
+                score, _ = self.minimax(temp_grid, depth-1, alpha, beta, False)
+                score += column_penalty
+                if score > max_score:
+                    max_score = score
+                    best_col = col
+                alpha = max(alpha, score)
+                if beta <= alpha:
+                    break
+            return max_score, best_col
+
+        else:
+            min_score = float('inf')
+            best_col = None
+            for col in valid_columns:
+                temp_grid = self.simulate_move(grid, col, 1)
+                column_penalty = self.evaluate_column(col, temp_grid)
+                if self.check_win(self.last_cell[0], self.last_cell[1], temp_grid):
+                    return -1000, col
+                score, _ = self.minimax(temp_grid, depth-1, alpha, beta, True)
+                score += column_penalty
+                if score < min_score:
+                    min_score = score
+                    best_col = col
+                beta = min(beta, score)
+                if beta <= alpha:
+                    break
+            return min_score, best_col
+
     def get_valid_columns(self, grid):
-        
+
         """ Returns a list of valid columns
         
         Args:
-            grid: current game situation in grid form
+            grid: current or simulated game situation in grid form
         
         Returns:
             valid_columns: columns that are not already full """
-        
+
 
         valid_columns = [col for col in self.columns if grid[0][col] == 0]
         return valid_columns
 
-    def check_win(self, col, grid):
+    def simulate_move(self, grid, col, player):
 
-        """ Checks if a specific move will cause a win
+        """ Edits the grid based on a simulated move.
+            Updates the marker for the last move made.
+        
+        Args:
+            grid: current or simulated game situation in grid form
+            col: chosen column for the simulated move
+            player: player whose turn is being simulated
+        
+        Returns:
+            grid: grid updated with the simulated move """
+
+        temp_grid = [row[:] for row in grid]
+
+        for r in range(5, -1, -1):
+            if temp_grid[r][col] == 0:
+                temp_grid[r][col] = player
+                self.last_cell = (r, col)
+                break
+
+        return temp_grid
+
+    def evaluate_grid(self, grid):
+
+        """ Checks if current game situation is a win
+        
+        Args:
+            grid: current or simulated game situation in grid form
+        
+        Returns:
+            grid value 1000 if AI wins, -1000 if opponent wins, 0 otherwise """
+
+        if self.check_win(self.last_cell[0], self.last_cell[1], grid):
+            if grid[self.last_cell[0]][self.last_cell[1]] == 2:
+                return 1000
+            else:
+                return -1000
+        return 0
+
+    def evaluate_column(self, col, grid):
+
+        """ Evaluates columns and penalizes for filling them too much.
+        
+        Args:
+            col: column that is being checked
+            grid: current or simulated game situation in grid form
+        
+        Returns:
+            penalty: -1 if column is penalized (too full), 0 otherwise """
+
+        penalty = 0
+        for row in range(3, -1, -1):
+            if grid[row][col] != 0:
+                penalty -= 1
+            else:
+                break
+
+        return penalty
+
+    def check_win(self, row, col, grid):
+
+        """ Checks if a specific move causes a win
+
+        Args:
+            row: row of the last move
+            col: column of the last move
+            grid: current or simulated game situation in grid form
 
         Returns:
             True if move causes a win
             False if move doesn't cause a win """
 
-        test_grid = [row[:] for row in grid]
+        player = grid[row][col]
+        if player == 0:
+            return False
 
-        for r in range(5, -1, -1):
-            if test_grid[r][col] == 0:
-                row = r
-                break
-
-        test_grid[row][col] = 2
+        if row == col == -1:
+            return False
 
         row_start = max(0, row - 3)
         col_start = max(0, col - 3)
@@ -66,19 +205,20 @@ class AI:
 
         for r in range(row_start, row_end + 1):
             for c in range(col_start, col_end + 1):
-                if test_grid[r][c] == 2:
-                    if (self.check_direction(test_grid, r, c, 1, 0) or
-                        self.check_direction(test_grid, r, c, 0, 1) or
-                        self.check_direction(test_grid, r, c, 1, 1) or
-                        self.check_direction(test_grid, r, c, 1, -1)):
+                if grid[r][c] == player:
+                    if (self.check_direction(grid, r, c, 1, 0) or
+                        self.check_direction(grid, r, c, 0, 1) or
+                        self.check_direction(grid, r, c, 1, 1) or
+                        self.check_direction(grid, r, c, 1, -1)):
                         return True
         return False
 
-    def check_direction(self, test_grid, row, col, delta_row, delta_col):
+    def check_direction(self, grid, row, col, delta_row, delta_col):
 
         """ Checks if there are four connected markers starting from speficied cell.
 
         Args:
+            grid: current or simulated game situation in grid form
             row: row index of the cell currently being checked
             col: column index of the cell currently being check
             delta_row: vertical direction
@@ -90,14 +230,29 @@ class AI:
             True if win row was found
             False if no win row was found """
 
+        player = grid[row][col]
+        if player == 0:
+            return False
         count = 0
 
         for i in range(4):
             r = row + i * delta_row
             c = col + i * delta_col
-            if 0 <= r < 6 and 0 <= c < 7 and test_grid[r][c] == 2:
+            if 0 <= r < 6 and 0 <= c < 7 and grid[r][c] == player:
                 count += 1
             else:
                 break
 
         return count == 4
+
+    def hash_grid(self, grid):
+
+        """ Turns grid into a hash table.
+        
+        Args:
+            grid: current or simulated game situation in grid form
+        
+        Return:
+            grid in hash table form"""
+
+        return tuple(tuple(row) for row in grid)
