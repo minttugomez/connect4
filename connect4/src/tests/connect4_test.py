@@ -262,3 +262,26 @@ class TestConnectFour(unittest.TestCase):
         output = mock_stdout.getvalue()
 
         self.assertIn("Starting new game", output)
+
+    @patch("builtins.input")
+    @patch("sys.stdout", new_callable=StringIO)
+
+    def test_run_input_none(self, mock_stdout, mock_input):
+        
+        mock_input.side_effect = [
+            None,
+            "exit",
+            "yes"
+        ]
+
+        self.connect_four.ai.play = lambda _: 4
+
+        self.connect_four.run()
+
+        self.assertTrue(self.connect_four.exit)
+
+        expected_grid = "[0, 0, 0, 0, 0, 0, 0]\n[0, 0, 0, 0, 0, 0, 0]\n[0, 0, 0, 0, 0, 0, 0]\n[0, 0, 0, 0, 0, 0, 0]\n[0, 0, 0, 0, 0, 0, 0]\n[0, 0, 0, 0, 0, 0, 0]\n[0, 0, 0, 0, 0, 0, 0]\n[0, 0, 0, 0, 0, 0, 0]\n[0, 0, 0, 0, 0, 0, 0]\n[0, 0, 0, 0, 0, 0, 0]\n[0, 0, 0, 0, 0, 0, 0]\n[0, 0, 0, 0, 0, 0, 0]\n"
+
+        output = mock_stdout.getvalue()
+
+        self.assertIn(expected_grid, output)

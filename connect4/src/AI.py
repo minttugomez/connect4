@@ -13,7 +13,7 @@ class AI:
 
         self.columns = [3,2,4,1,5,0,6]
         self.last_cell = (-1, -1)
-        self.time_limit = 2.0
+        self.time_limit = 5
         self.best_moves = {}
         self.start_time = None
 
@@ -59,14 +59,16 @@ class AI:
             best_col: column index of the best move found at this depth  """
 
         if time.perf_counter() - self.start_time > self.time_limit:
-            return 0, None
+            timeout = True
+        else: timeout = False
 
         if depth == 0 or self.check_win(self.last_cell[0], self.last_cell[1], grid) or not self.get_valid_columns(grid):
             return self.evaluate_grid(grid), None
 
         valid_columns = self.get_valid_columns(grid)
-        best = self.best_moves.get(self.hash_grid(grid))
-        if best in valid_columns:
+        hash_grid = self.hash_grid(grid)
+        best = self.best_moves.get(hash_grid)
+        if best is not None:
             valid_columns.remove(best)
             valid_columns.insert(0, best)
 
@@ -75,15 +77,17 @@ class AI:
             best_col = None
             for col in valid_columns:
                 temp_grid = self.simulate_move(grid, col, 2)
-                column_penalty = self.evaluate_column(col, temp_grid)
-                score, _ = self.minimax(temp_grid, depth-1, alpha, beta, False)
-                score += column_penalty
-                if score > max_score:
-                    max_score = score
-                    best_col = col
-                alpha = max(alpha, score)
-                if beta <= alpha:
-                    break
+                if self.check_win(self.last_cell[0], self.last_cell[1], temp_grid):
+                    return 1000, col
+                if not timeout:
+                    score, column = self.minimax(temp_grid, depth-1, alpha, beta, False)
+                    self.best_moves[self.hash_grid(temp_grid)] = column
+                    if score > max_score:
+                        max_score = score
+                        best_col = col
+                    alpha = max(alpha, score)
+                    if beta <= alpha:
+                        break
             return max_score, best_col
 
         else:
@@ -91,17 +95,17 @@ class AI:
             best_col = None
             for col in valid_columns:
                 temp_grid = self.simulate_move(grid, col, 1)
-                column_penalty = self.evaluate_column(col, temp_grid)
                 if self.check_win(self.last_cell[0], self.last_cell[1], temp_grid):
                     return -1000, col
-                score, _ = self.minimax(temp_grid, depth-1, alpha, beta, True)
-                score += column_penalty
-                if score < min_score:
-                    min_score = score
-                    best_col = col
-                beta = min(beta, score)
-                if beta <= alpha:
-                    break
+                if not timeout:
+                    score, column = self.minimax(temp_grid, depth-1, alpha, beta, True)
+                    self.best_moves[self.hash_grid(temp_grid)] = column
+                    if score < min_score:
+                        min_score = score
+                        best_col = col
+                    beta = min(beta, score)
+                    if beta <= alpha:
+                        break
             return min_score, best_col
 
     def get_valid_columns(self, grid):
@@ -157,26 +161,6 @@ class AI:
             else:
                 return -1000
         return 0
-
-    def evaluate_column(self, col, grid):
-
-        """ Evaluates columns and penalizes for filling them too much.
-        
-        Args:
-            col: column that is being checked
-            grid: current or simulated game situation in grid form
-        
-        Returns:
-            penalty: -1 if column is penalized (too full), 0 otherwise """
-
-        penalty = 0
-        for row in range(3, -1, -1):
-            if grid[row][col] != 0:
-                penalty -= 1
-            else:
-                break
-
-        return penalty
 
     def check_win(self, row, col, grid):
 

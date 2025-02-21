@@ -35,6 +35,8 @@ class ConnectFour:
                     print(row)
                 try:
                     column = input("Choose column: ")
+                    if column is None:
+                        continue
                     if column == "exit":
                         self.exit = True
                         break
