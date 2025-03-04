@@ -133,7 +133,7 @@ class TestConnectFour(unittest.TestCase):
             "yes"
         ]
 
-        self.connect_four.ai.play = lambda _: 4
+        self.connect_four.ai.play = lambda _: (4, _)
 
         self.connect_four.run()
 
@@ -274,7 +274,7 @@ class TestConnectFour(unittest.TestCase):
             "yes"
         ]
 
-        self.connect_four.ai.play = lambda _: 4
+        self.connect_four.ai.play = lambda _: (4, _)
 
         self.connect_four.run()
 

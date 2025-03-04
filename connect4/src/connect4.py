@@ -56,7 +56,7 @@ class ConnectFour:
                     pass
 
             elif self.turn == 2:
-                column = self.ai.play(self.grid)
+                column, _ = self.ai.play(self.grid)
                 if column in range(0, 7) and self.grid[0][column] == 0:
                     success = self.play_turn(self.turn, column)
 

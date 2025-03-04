@@ -29,17 +29,18 @@ class AI:
             best_col: the column where the AI has chosen to place the next marker """
 
         self.start_time = time.time()
+        self.best_moves = {}
 
         best_col = None
         for depth in range(1, 100):
             if time.time() - self.start_time > self.time_limit:
                 break
-            _, col = self.minimax(grid, depth, float('-inf'), float('inf'), is_maximizing=True)
+            score, col = self.minimax(grid, depth, float('-inf'), float('inf'), is_maximizing=True)
             if col is not None:
                 best_col = col
-                self.best_moves[self.hash_grid(grid)] = col
 
-        return best_col
+        print(f'Depth: {depth}, Time: {time.time()-self.start_time}')
+        return best_col, score
 
     def minimax(self, grid, depth, alpha, beta, is_maximizing):
 
@@ -80,14 +81,14 @@ class AI:
                 if self.check_win(self.last_cell[0], self.last_cell[1], temp_grid):
                     return 1000, col
                 if not timeout:
-                    score, column = self.minimax(temp_grid, depth-1, alpha, beta, False)
-                    self.best_moves[self.hash_grid(temp_grid)] = column
+                    score, _ = self.minimax(temp_grid, depth-1, alpha, beta, False)
                     if score > max_score:
                         max_score = score
                         best_col = col
                     alpha = max(alpha, score)
                     if beta <= alpha:
                         break
+            self.best_moves[hash_grid] = best_col
             return max_score, best_col
 
         else:
@@ -98,14 +99,14 @@ class AI:
                 if self.check_win(self.last_cell[0], self.last_cell[1], temp_grid):
                     return -1000, col
                 if not timeout:
-                    score, column = self.minimax(temp_grid, depth-1, alpha, beta, True)
-                    self.best_moves[self.hash_grid(temp_grid)] = column
+                    score, _ = self.minimax(temp_grid, depth-1, alpha, beta, True)
                     if score < min_score:
                         min_score = score
                         best_col = col
                     beta = min(beta, score)
                     if beta <= alpha:
                         break
+            self.best_moves[hash_grid] = best_col
             return min_score, best_col
 
     def get_valid_columns(self, grid):
